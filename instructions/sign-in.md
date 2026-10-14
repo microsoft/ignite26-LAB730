@@ -1,4 +1,4 @@
-# Sign in
+## Sign in
 
 1. To begin, log into the virtual machine using the following credentials: +++@lab.VirtualMachine(Win11-Pro-Base).Password+++
 
