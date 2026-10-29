@@ -1,10 +1,12 @@
-## Sign in
+# Sign in
 
 1. To begin, log into the virtual machine using the following credentials: +++@lab.VirtualMachine(Win11-Pro-Base).Password+++
 
-   > [!Note] Text formatted as an +++example+++ represents type text. Clicking on this text will automatically insert it to prevent any typing errors. It types into the VM at the cursor, so select the password field first.
+2. Open **Microsoft Edge**, go to `https://github.com/enterprises/skillable-events/sso`, and sign in with the username and Temporary Access Pass (TAP). Use the password only if you're asked for one instead. Keep this page open.
 
-2. Open **Microsoft Edge**, go to +++https://github.com/enterprises/skillable-events/sso+++, and sign in with username +++@lab.CloudPortalCredential(User1).Username+++ and password +++@lab.CloudPortalCredential(User1).Password+++. Keep this page open.
+    - **Username:** +++@lab.CloudPortalCredential(User1).Username+++
+    - **Password:** +++@lab.CloudPortalCredential(User1).Password+++
+    - **TAP:** +++@lab.CloudPortalCredential(User1).AccessToken+++
 
 3. Open **Visual Studio Code**, select **Sign in**, then **Continue with GitHub**. Choose the single sign-on option when it appears and complete authentication through the SSO page you left open.
 

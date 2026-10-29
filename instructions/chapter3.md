@@ -1,139 +1,140 @@
-# Chapter 3
+# Chapter 3 — Connect a knowledge source
 
-**Time budget: about 10 minutes.** Complete Chapter 2 before starting, with the `medimageparse` MCP server and both `segment_lesions` and `measure_lesions` working.
+**Time budget: ~10 minutes.**
 
-A brain tumor follow-up report needs more than the current image: diagnosis, surgery, treatment dates, and prior measurements affect its interpretation. You will copy two completed skills and a small data folder, then compare reports on the same image with and without that context. There are no required code changes in this chapter.
+> Stuck? Open `docs/troubleshooting.md` in VS Code Explorer.
 
-## Skim the patient record (~2 min)
+**Prerequisites:** Chapter 2 complete, with all four `medimageparse` tools working and the `write-imaging-factsheet` skill under `.github/skills/`.
 
-1. In Explorer, open `chapters/chapter3-knowledge-sources/data/patients/SYN0417.json`. The chart uses flat fields rather than a FHIR schema. Read these fields:
+## Overview
 
-   - `diagnosis`: glioblastoma, an aggressive primary brain tumor, in the left frontal lobe.
-   - `procedures`: subtotal resection on 2026-05-19. Enhancing tumor was deliberately left along the back wall of the cavity to protect language and motor areas.
-   - `treatments`: chemoradiation finished on 2026-07-24; adjuvant chemotherapy started on 2026-08-24.
-   - `expected_post_treatment_findings`: the resection cavity and post-treatment change should be described as expected, not new.
-   - `imaging_studies`: studies `_000` through `_002`. Only `_002` has a retained image and full report, including the prior measurement.
-   - `pending_orders`: the current study, `_003`, ordered eight weeks after completion of chemoradiation.
-   - `last_record_entry_note`: the chart stops at the `_003` order. It contains no later events.
+In Chapter 2's optional comparison, the agent measured the 2018 scan against the 2017 scan and reported that the tumor core more than doubled. The number is correct, and it is misleading: the lesion was resected between those two exams. A radiologist reporting on such an exam would need to know additional **patient context**: the diagnosis, the treatments and their dates, the surgery, and what the order asks. In this chapter you give the agent a synthetic patient record and a comparison-aware report skill, run the same scans through it, and compare the reports.
 
-2. Identify `_003` as the current study and `_002`, four weeks earlier, as the most recent report available for comparison.
+There's nothing to write in this chapter. Copy in two skills and a small data folder, run the agent, and observe. Same scans, same tools, a different report once the agent can read the chart.
 
-   > [!Knowledge] For a few months after brain radiation, the treated area can swell and enhance more on MRI without tumor growth. This is called pseudoprogression. An increase eight weeks after treatment raises a different interpretation than the same increase six months later. The chart supplies the timing needed to discuss treatment effect versus progression; the current pixels alone do not supply that history.
+**Steps:**
 
-   !IMAGE[Timeline for SYN0417: diagnosis MRI, surgery, chemoradiation, the prior MRI at 25 x 20 mm, and the current MRI eight weeks after radiation. Patient context lets the report compare measurements and discuss treatment effect.](https://raw.githubusercontent.com/microsoft/ignite26-LAB730/main/instructions/img/treatment-timeline.svg)
+1. Skim the patient record. (~3 min)
+2. Copy the two skills and the `data/` folder into your workspace. (~2 min)
+3. Run the agent on the current study. (~3 min)
+4. Compare with your Chapter 2 report. (~2 min)
 
-## Copy the skills and data (~3 min)
+> [!Note] The patient records under `data/patients/` are **synthetic**, built around de-identified MRI reports.
 
-3. In the VS Code PowerShell terminal, from +++C:\Lab+++, copy the completed history-lookup skill:
+## Step 1 — Skim the patient record (~3 min)
 
-   +++Copy-Item -Recurse chapters\chapter3-knowledge-sources\answer-key\.github\skills\lookup-patient-history .github\skills\+++
+1. Open `chapters/chapter3-knowledge-sources/data/patients/SYN0056.json`. The shape is intentionally simple (not something that a real-world export from an EHR would look like): flat fields, easy to read. Patient `SYN0056` is the case you measured in Chapter 2.
 
-4. Copy the completed context-aware report skill:
+    Things to notice:
 
-   +++Copy-Item -Recurse chapters\chapter3-knowledge-sources\answer-key\.github\skills\write-report-with-ehr .github\skills\+++
+    - **`diagnosis`**: lung adenocarcinoma with a solitary right parietal brain metastasis.
+    - **`treatments`**: CyberKnife radiosurgery to the metastasis in October 2016, then maintenance chemotherapy.
+    - **`procedures`**: right parietal craniotomy and resection on **2017-08-17**. Pathology was mostly radiation necrosis with a small focus of viable tumor.
+    - **`imaging_studies`**: `_000` to `_005`. Only `_002` (2017-06-13) has a retained image and a full report. `_003` is the post-operative MRI summary: thin smooth enhancement, no nodular enhancement. `_004` and `_005` are head CTs with a 6 mm midline shift.
+    - **`medications`**: dexamethasone since 2018-04-09, for the edema.
+    - **`pending_orders`**: the current MRI, `_006` (2018-04-14): *assess for recurrent tumor versus radiation necrosis.*
+    - **`last_record_entry_note`**: the chart stops at the `_006` order.
 
-5. Create the workspace-root data directories:
+2. Then open `chapters/chapter3-knowledge-sources/data/reports/SYN0056_002.md`, the prior report, which measured the mass at 4.3 × 3.4 × 4.3 cm.
 
-   +++New-Item -ItemType Directory -Force data\patients, data\reports, data\images+++
+> [!Knowledge] **Why the history matters.** A larger mass on a follow-up scan does not necessarily mean that a tumor has continued to grow. Here, the earlier scan was taken before the lesion was surgically removed. The patient also received radiation treatment, and the removed tissue contained both radiation-related damage and viable tumor. Knowing this, the agent should describe the mass at the treated site and explain that recurrent tumor and delayed radiation injury are both possible, rather than simply call it progression. The history does not settle the diagnosis. It changes which conclusions are justified and what uncertainty the report needs to communicate.
 
-6. Copy the synthetic chart:
+!IMAGE[Timeline for SYN0056: radiosurgery in October 2016, the prior MRI on 2017-06-13, resection and a post-operative MRI in August 2017, head CTs on dexamethasone, and the current MRI on 2018-04-14. Comparing with the prior crosses the resection. Without the chart the report says the tumor core increased; with the chart it says the mass is new since the post-operative MRI and frames recurrence versus radiation necrosis.](https://raw.githubusercontent.com/microsoft/LAB730-ignite-2026-healthcare-agents/main/chapters/chapter3-knowledge-sources/img/treatment-timeline.svg)
 
-   +++Copy-Item chapters\chapter3-knowledge-sources\data\patients\SYN0417.json data\patients\+++
+## Step 2 — Copy the skills and data (~2 min)
 
-7. Copy the prior report:
+1. From the workspace root, in the VS Code PowerShell terminal:
 
-   +++Copy-Item chapters\chapter3-knowledge-sources\data\reports\SYN0417_002.md data\reports\+++
+    ```powershell
+    Copy-Item -Recurse -Force chapters\chapter3-knowledge-sources\answer-key\* .
+    Copy-Item -Recurse -Force chapters\chapter3-knowledge-sources\data .
+    ```
 
-8. Copy the two patient images and their sidecars:
+2. That adds:
 
-   +++Copy-Item chapters\chapter3-knowledge-sources\data\images\SYN0417_* data\images\+++
+    ```
+    .github/skills/
+      lookup-patient-history/       reads the chart and prior reports
+      write-report-with-ehr/        writes the context-aware report
+    data/
+      patients/SYN0056.json         the chapter's patient (SYN0062 is optional)
+      reports/SYN0056_002.md        the prior report
+      images/SYN0056_006.nii.gz     current MRI, 2018-04-14 (same scan as Chapter 2)
+      images/SYN0056_002.nii.gz     prior MRI, 2017-06-13 (same scan as Chapter 2)
+    ```
 
-9. In Explorer, open `.github/skills/lookup-patient-history/SKILL.md` and read how it obtains context. It infers the patient ID from the image filename, reads the JSON chart, and includes the prior report text. It makes no model-tool calls.
+    The two skills:
 
-   > [!Knowledge] In a real EHR integration, this skill is where tools would query Epic or another record system. The local JSON lookup represents that data-retrieval role in Lab 730.
+    - **`lookup-patient-history`**: pure data. Infers the patient ID from the image file name, reads the JSON chart, and inlines the prior report. It makes no tool calls. In a real deployment, this is the skill that would call your EHR.
+    - **`write-report-with-ehr`**: calls `lookup-patient-history`, picks the most recent prior with a retained image, runs `write-imaging-factsheet` on the current and prior scans, then writes a comparison-aware report. It reads change against procedures and treatments between the exams, and answers the order.
 
-10. Open `.github/skills/write-report-with-ehr/SKILL.md`. Follow its workflow: invoke `lookup-patient-history`, call `segment_lesions` and `measure_lesions` once each on the current image, and write a comparison-aware report.
+    No MCP changes: the report skill uses the four tools from Chapter 2.
 
-    > [!Note] No MCP changes are needed. The report skill uses the two tools you registered in Chapter 2.
+3. Reload the VS Code window so the new skills register: open the command palette (`Ctrl+Shift+P`) and run `Developer: Reload Window`.
 
-11. Press **Ctrl+Shift+P** and run +++Developer: Reload Window+++ so VS Code registers the new skills.
+## Step 3 — Run the agent (~3 min)
 
-    > [+Hint] A copied skill is not registered
-    >
-    > Type `/` in Copilot Chat and check for `lookup-patient-history` and `write-report-with-ehr`. Each skill directory must match the `name:` field in its `SKILL.md` frontmatter exactly. Confirm the copies are under the workspace-root `.github/skills/`, then start a fresh chat.
+1. Start a new chat with **Radiology Assistant** and ask:
 
-## Run the agent (~3 min)
+    ```
+    /write-report-with-ehr Please write a radiology report for C:\Lab\data\images\SYN0056_006.nii.gz.
+    ```
 
-12. Start a new Copilot Chat session and select **Radiology Assistant**.
+2. Watch the trace:
 
-13. Send this prompt:
+    1. `lookup-patient-history` returns a `PATIENT RECORD` block with the diagnosis, procedures, imaging history, and the `_002` report inlined.
+    2. `write-imaging-factsheet` segments and cleans both scans and calls `describe_lesions` once with the prior.
+    3. Two trace sections come before the report:
+        - `## Prior information used`: what the agent leaned on.
+        - `## Clinical details used in the report`: each report phrase paired with its record field or descriptor ID.
+    4. The `<confidence>` and `<report>` blocks come last.
 
-    +++Use the write-report-with-ehr skill to write a report for data/images/SYN0417_003.png.+++
+3. Check the report:
 
-14. Watch the trace for `lookup-patient-history`. Its structured `PATIENT RECORD` block should include the diagnosis, treatments, and the `_002` report text.
+    - **INDICATION** comes from the `_006` order.
+    - **COMPARISON** names the 2017-06-13 MRI (`SYN0056_002`) and the other relevant studies.
+    - **FINDINGS** quotes the factsheet's diameters and volumes, says the comparison crosses the 2017-08-17 resection, describes the mass against the post-operative baseline, notes the dexamethasone, and attributes the midline shift to the head CTs.
+    - **IMPRESSION** answers the order: it frames recurrent tumor versus radiation necrosis rather than calling progression.
 
-15. Check that the trace contains one `mcp_medimageparse_segment_lesions` call on `_003` and one `mcp_medimageparse_measure_lesions` call on the enhancing-tumor mask.
+## Step 4 — Compare with your Chapter 2 report (~2 min)
 
-    > [!Knowledge] The prior measurement comes from the prior report as text. The agent should not segment the prior image again for this comparison.
+1. Put this report next to the comparison report from Chapter 2's optional step: the same two scans, measured by the same tools. If you skipped that step or no longer have the report, run:
 
-    > [+Hint] The agent skips the requested skill
-    >
-   > Confirm that `write-report-with-ehr` appears under `/`. If it is registered, check that its `description:` states when to use it and that the agent is required to use report-writing skills instead of drafting independently. Save any changes and start a new chat; the agent does not pick up file edits mid-conversation.
-    >
-    > If tools are missing, open **View > Output > MCP Servers > medimageparse**, check for syntax or import errors, and confirm that both wrappers have `@mcp.tool(...)`. Run **MCP: Reload Servers** after correcting registration. Open `docs/troubleshooting.md` in Explorer for additional guidance.
+    ```
+    /write-report-measured Please write a radiology report for C:\Lab\data\images\SYN0056_006.nii.gz, comparing with the prior C:\Lab\data\images\SYN0056_002.nii.gz.
+    ```
 
-16. Inspect the two trace sections before the final report:
+2. What you should see:
 
-    - `## Prior information used`: which prior information the agent used.
-    - `## Clinical details used in the report`: each report phrase paired with its EHR field or tool call.
+    - ✅ Chapter 2 reports the tumor-core change since 2017-06-13 as an increase. Chapter 3 says the comparison crosses the resection and that the mass is new since the post-operative MRI.
+    - ✅ Chapter 3's **INDICATION** comes from the order; Chapter 2's is `Not provided.`
+    - ✅ Chapter 3's **IMPRESSION** answers the order's question; Chapter 2's lists findings.
+    - ✅ Chapter 3 places the mass in the right parietal lobe with support from the chart; in Chapter 2, location was the agent's own read.
+    - ✅ Chapter 3 mentions the steroids and the CT midline shift; Chapter 2 has no way to know about them.
+    - ⚠️ The measurements are the same, apart from small run-to-run differences in the model's output. The improvement comes from context, not a smarter model or new tools.
 
-    Confirm that the `<confidence>` and `<report>` blocks appear last.
+> [!Note] **Improving tool and measurement compliance.** By this point the agent has many skills and tools, and smaller models may start to break down: ignoring instructions, skipping tool calls, or calling tools incorrectly. If you see this behavior, try using the improved-compliance answer key in `chapters/chapter3-knowledge-sources/answer-key-improved-compliance/` to set up a new agent and update the skills it uses. Observe the changes and how editing instructions can help you achieve improvements without bringing in more expensive models.
 
-17. Read the report and check all of the following:
+## Things you can try
 
-    - It includes `COMPARISON: MRI brain with and without contrast, 2026-08-21, SYN0417_002.`
-    - It quotes the current measurement beside the prior measurement, such as "now [current dimensions] mm, previously 25 x 20 mm".
-    - It describes the resection cavity as an expected post-surgical finding.
-    - It discusses any increase against the treatment timeline, considering treatment-related change versus progression rather than declaring progression outright.
+- **Remove the surgery.** In your copy of `data/patients/SYN0056.json`, delete the craniotomy from `procedures` and study `_003` from `imaging_studies`. Rerun Step 3. Does the report now call the change growth? Should it?
+- **Another patient.** Run `/write-report-with-ehr Please write a radiology report for C:\Lab\data\images\SYN0062_001.nii.gz.` (renal cell carcinoma, untreated metastases, on an anticoagulant). Its priors are summaries only, so the factsheet has no change lines and the report compares in words. Confirm the lookup keys off the file name, not a hardcoded ID.
+- **Two ways to measure.** The prior report measured the 2017 mass at 4.3 × 3.4 × 4.3 cm; `describe_lesions` measured the same scan at about 4.4 × 3.5 cm. Open the 2017 `.measurements.png` in `audit-log/` and consider why a radiologist's caliper reading and a geometric measurement on a mask can differ.
+- **FHIR shape.** Refactor `lookup-patient-history` to consume a minimal FHIR bundle (`Patient`, `Condition`, `Procedure`, `MedicationStatement`, `ImagingStudy`, `DiagnosticReport`) instead of the flat JSON. The report skill shouldn't need to change; that's the point.
+- **Look at the audit log.** Chapter 3 saved its files in new folders, `audit-log/data/images/SYN0056_006/` and `SYN0056_002/`, because the image paths differ from Chapter 2's even though the scans are the same. Open its factsheet next to Chapter 2's in `audit-log/samples/mri-brain-lesions/case-056/2018-04-14/series-0902/` and compare the numbers. Small differences come from the model's output, not the code.
 
-## Compare without the chart (~2 min)
+## What you should have at the end
 
-18. Send this prompt to run the Chapter 2 skill on the same image:
+- [] Skimmed `SYN0056.json` and the `_002` report, and know which fields the report should lean on
+- [] `lookup-patient-history` and `write-report-with-ehr` under `.github/skills/`
+- [] `data/patients/`, `data/reports/`, and `data/images/` at the workspace root
+- [] A Chapter 3 report on `_006` whose COMPARISON names `_002`, whose numbers match the factsheet, which accounts for the resection between the exams, and whose impression answers the order
+- [] A side-by-side comparison with your Chapter 2 report on the same scans
 
-    +++Use the write-report-measured skill to write a report for data/images/SYN0417_003.png.+++
+## What's next
 
-19. Compare the two reports side by side:
+You've built the full loop: an agent, a structured report skill, a segmentation foundation model, measurement code, and patient context. These patterns generalize:
 
-    - Chapter 3 anchors **COMPARISON** to `_002`; the Chapter 2-style report has no chart-derived comparison.
-    - Chapter 3 places current and prior measurements together; Chapter 2 has only the current measurement and cannot describe interval growth from it alone.
-    - Chapter 3 treats the resection cavity as expected; Chapter 2 may describe it as cystic or necrotic.
-    - Chapter 3 starts **IMPRESSION** with interval change and interprets it against the treatment timeline; Chapter 2 starts with current findings.
-    - Chapter 3's **INDICATION** reflects the order eight weeks after chemoradiation; Chapter 2 has no order-derived indication.
-
-20. Compare the tool traces. Both report skills use the same segmentation and measurement tools on the same image. The added patient context, not a different model, accounts for the intended difference in the reports.
-
-## Optional: Extend the knowledge source
-
-Choose one exercise:
-
-21. **Move the clock.** Edit your workspace copy of `data/patients/SYN0417.json` so the `_003` order says "6 months after completion of chemoradiation", and shift the `treatments` dates to match. Rerun the context-aware report. Does its impression stop hedging about treatment-related change? Should it?
-
-22. **Add a second patient.** Create a fictional `data/patients/<id>.json`, add an image named `<id>_<index>.png` and its sidecar, then run the report skill. Confirm that the lookup uses the filename rather than a hardcoded patient ID.
-
-23. **Calculate interval change in code.** Add a `compare_measurements` MCP tool that returns the percent change between two bidimensional measurements, and have `write-report-with-ehr` cite its output. The report currently quotes both measurements without calculating change; arithmetic used for decisions belongs in code.
-
-24. **Use a FHIR schema.** Refactor `lookup-patient-history` to consume a minimal FHIR bundle with `Patient`, `Condition`, `Procedure`, `MedicationStatement`, `ImagingStudy`, and `DiagnosticReport` instead of the flat JSON. Keep the report skill unchanged while replacing the history lookup's data source.
-
-## Check your work
-
-- [] You have read `SYN0417.json` and identified the fields that should inform the report.
-- [] `lookup-patient-history` and `write-report-with-ehr` are under the workspace-root `.github/skills/`.
-- [] The workspace contains `data/patients/SYN0417.json`, `data/reports/SYN0417_002.md`, and the SYN0417 PNG images and sidecars under `data/images/`.
-- [] The `_003` report identifies `_002` in **COMPARISON**, places current and prior measurements side by side, treats the resection cavity as expected, and discusses change against the treatment timeline.
-- [] You have compared the context-aware report with the Chapter 2 skill on the same image.
-
-> [+Hint] You need a completed example
->
-> Open `chapters/chapter3-knowledge-sources/answer-key/` in Explorer to compare the completed files with your workspace-root copies.
-
-You now have an agent, report-writing skills, segmentation and measurement tools, and patient context. The same pattern can use a FHIR or HL7 client instead of local charts, different prompts for MedImageParse targets across CT, MRI, X-ray, ultrasound, and pathology, or MedImageParse 3D for whole volumes. Keep deterministic calculations such as measurements, interval change, and volumetry in tools; use skills to direct the task and the agent to select them.
+- **Real EHRs.** Swap the synthetic `data/patients/*.json` for a FHIR or HL7 client. The `lookup-patient-history` skill stays; only the data source changes.
+- **More targets and modalities.** MedImageParse segments from text prompts across CT, MRI, X-ray, ultrasound, pathology, and more. Same MCP server pattern, different models and prompts in `models.json`.
+- **More code behind tools.** Anything deterministic, such as measurement, change calculation, and volumetry, belongs in code behind an MCP tool, not in a prompt.

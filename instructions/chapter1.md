@@ -1,147 +1,150 @@
-# Chapter 1
+# Chapter 1 — Simple agent with a skill
 
-**Time budget: about 20 minutes.** Complete **Set up** before starting.
+**Time budget: ~12 minutes.**
 
-You will build a minimal **Radiology Assistant** agent that drafts a brain MRI report with a general-purpose language model. First, run it without a skill. Then add a reusable instruction packet that sets the report structure, phrasing, confidence buckets, and a rule against invented measurements.
+> Stuck? Open `docs/troubleshooting.md` in VS Code Explorer.
 
-> [!Knowledge] An agent file sets the assistant's behavior and constraints. A skill supplies instructions for a particular task and can load supporting files when needed. This chapter uses no specialized medical foundation model. Better report structure does not make a general-purpose model clinically reliable.
+**Prerequisites:** **Environment setup and check** complete — VS Code open on `C:\Lab` with Copilot Chat signed in, and the environment check passing. When you open the workspace in VS Code, confirm that it's a **trusted workspace** when prompted.
 
-## Set up the agent (~1 min)
+## Overview
 
-1. In the VS Code terminal, from the repository root, create the agent directory:
+In this chapter you will build a minimal "radiology assistant" agent inside VS Code that uses a general-purpose LLM (no specialized foundation model yet) to generate a structured report from a brain MRI image. The point is to feel how *cheap* and *easy* it is to compose an agent from skills — and to see, by the end, that a generic LLM is **not** clinically reliable on its own.
 
-   +++New-Item -ItemType Directory -Force .github\agents+++
+We start with a very simple agent, without any skills, and progress by adding a skill to start seeing better conformance.
 
-2. Copy the starter agent into that directory:
+A "Radiology Assistant" agent built on a generic LLM will happily produce a brain MRI report, but it is not clinically reliable: section names drift run-to-run, hedging language is inconsistent, confidence is never stated — and, worst of all for brain lesions, it will quote lesion sizes in millimeters that it has no way to measure. In this chapter you build that bare agent, watch it drift, then close the gap by adding a single **skill** — a structured, reusable instruction packet that gives the agent a fixed report template, phrasing discipline, a "no invented numbers" rule, and calibrated confidence buckets. By the end you'll see the same agent produce a consistent report on the same image.
 
-   +++Copy-Item chapters\chapter1-simple-agent\starter\.github\agents\radiology-assistant.agent.md .github\agents\radiology-assistant.agent.md+++
+**Steps:**
 
-3. In Explorer, open `.github/agents/radiology-assistant.agent.md` at the workspace root. Read its instructions and constraints, and notice how little radiological guidance it contains.
+0. Setup — copy the starter agent file to your workspace. (~1 min)
+1. See the gap — run the bare agent and note where structure drifts and numbers appear from nowhere. (~4 min)
+2. Add the skill — copy the Chapter 1 skill and read how it's built. (~4 min)
+3. Activate it — copy in the agent whose workflow calls the skill, then rerun. (~3 min)
+4. (Optional) Phrase bank additions.
 
-   > [!Note] Make your changes in this workspace-root file throughout the chapter. Do not edit the copy under `chapters/chapter1-simple-agent/starter/`. You will add a rule to the workspace-root copy when you activate the skill.
+> [!Note] **Build it yourself (optional).** The steps copy the Chapter 1 skill and agent from `answer-key/`. To write them yourself instead, start from the skill with TODOs in `chapters/chapter1-simple-agent/starter/.github/skills/write-report-simple/`; `chapters/chapter1-simple-agent/suggested-changes.md` has text for each TODO and for the agent's workflow step.
 
-## See the gap (~5 min)
+## Setup (~1 min)
 
-4. Open **Copilot Chat**. In the agent picker, select **Radiology Assistant**.
+1. Copy the starter agent file into your workspace `.github/agents/` so VS Code picks it up.
 
-   !IMAGE[The Radiology Assistant agent in the Copilot Chat agent picker](https://raw.githubusercontent.com/microsoft/ignite26-LAB730/main/instructions/img/agent.png)
+    You can do it manually or use the command line script in the VS Code PowerShell terminal:
 
-   > [+Hint] Radiology Assistant is missing from the picker
-   >
-   > Confirm that the file is at `.github/agents/radiology-assistant.agent.md` in the workspace root, not only inside the chapter's starter directory. Start a new Copilot Chat session after copying it.
-
-5. Send this prompt in Copilot Chat:
-
-   +++Please write a radiology report for <placeholder>.+++
-
-   > [!Note] This agent accepts file paths only. Do not drag the image into chat or attach it with the paperclip; the agent will refuse an attached image.
-
-6. Repeat the request with other available image paths until you have tried two or three different images. Look in `samples/` and `samples/extra/` in Explorer to choose the images.
-
-7. Compare the reports. Check whether the section names change, hedging is inconsistent, and confidence is missing as a separate value. Then inspect the sizes and sides:
-
-   - Does a report quote a lesion size such as "3.4 x 2.8 cm"? From this image alone, the agent has pixels, but no pixel spacing or lesion mask to support a measurement.
-   - Does the report place the lesion on the correct patient side?
-
-   > [!Knowledge] Brain MRI uses radiological display convention: the patient's right is on the image's left. Laterality describes the patient's side, not the side of the screen. A plausible-looking size is not a measurement unless it comes from a tool using the image geometry and lesion mask.
-
-8. Keep the first report, for `<placeholder>`, visible. You will compare it with another report on the same image after activating the skill.
-
-## Build the skill (~10 min)
-
-9. In the terminal, create the workspace-root skills directory:
-
-   +++New-Item -ItemType Directory -Force .github\skills+++
-
-10. Copy the starter skill into it:
-
-    +++Copy-Item -Recurse chapters\chapter1-simple-agent\starter\.github\skills\write-report-simple .github\skills\+++
-
-11. In Explorer, open and skim all three files under `.github/skills/write-report-simple/`:
-
-    ```text
-    SKILL.md                       Skill body with TODOs to complete
-    template/mri-brain-template.md  Completed report structure
-    references/phrase-bank.md      Completed example wordings
+    ```powershell
+    # from repo root
+    New-Item -ItemType Directory -Force .github\agents
+    Copy-Item chapters\chapter1-simple-agent\starter\.github\agents\radiology-assistant.agent.md .github\agents\radiology-assistant.agent.md
     ```
 
-    > [!Note] The directory name and the `name:` value in the skill's frontmatter must both be exactly `write-report-simple`. Hyphens and underscores are not interchangeable.
+2. Inspect the file and observe how it contains instructions constraining the agent, but doesn't have much specific radiological guidance. In Step 3 you'll replace it with a version whose workflow calls a skill.
 
-12. Open `chapters/chapter1-simple-agent/suggested-changes.md` alongside `.github/skills/write-report-simple/SKILL.md`. For each TODO below, read its teaching note and inspect the matching placeholder in `SKILL.md`. Use the text under the matching anchor in `suggested-changes.md`, or write your own.
+## Step 1 — See the gap (~4 min)
 
-13. Fill the **`description`** TODO using the `description` suggestion.
+1. Open Copilot Chat. With the agent definition file in place you should be able to select our new agent. In the agent picker, switch to **Radiology Assistant**.
 
-    > [!Knowledge] The agent matches this frontmatter string against your request to decide whether to invoke the skill. State the specific task it handles; a broad category such as "radiology" gives the agent little basis for selecting it.
+    !IMAGE[The Radiology Assistant agent in the Copilot Chat agent picker](https://raw.githubusercontent.com/microsoft/LAB730-ignite-2026-healthcare-agents/main/chapters/chapter1-simple-agent/img/agent.png)
 
-14. Fill the **`argument-hint`** TODO using the `argument-hint` suggestion.
-
-    > [!Knowledge] This declares optional inputs that other agents or later chapters can pass. You will not supply them in Chapter 1. Declaring `findings` and `measurements` now gives the skill a defined interface for later segmentation and measurement tool outputs.
-
-15. Fill the **`one-liner`** TODO using the `one-liner` suggestion.
-
-    > [!Knowledge] This sentence describes the skill to a person reading the file. Its audience differs from the frontmatter `description`, which helps the agent choose a skill.
-
-16. Fill the **`inputs`** TODO using the `inputs` suggestion.
-
-    > [!Knowledge] Naming an input in `argument-hint` does not explain how to use it. The body must state the input priority and treat tool-supplied `measurements` as authoritative, rather than letting the agent guess sizes from the image.
-
-17. Fill the **`how-to-use`** TODO using the `how-to-use` suggestion.
-
-    > [!Knowledge] The report template and phrase bank are already complete. Reference `template/mri-brain-template.md` and `references/phrase-bank.md` in the skill body so the agent reads them when needed.
-
-18. Fill the **`style-rules`** TODO using the `style-rules` suggestion.
-
-    > [!Knowledge] Explicit wording rules reduce variation in hedging and sentence structure. Include the two brain-lesion constraints: numbers come from tools only, and laterality refers to the patient's side.
-
-19. Fill the **`output-format`** TODO using the `output-format` suggestion, then save `SKILL.md`.
-
-    > [!Knowledge] Machine-readable output needs a literal template, not just a description of one. Exact `<confidence>` and `<report>` tags let downstream steps extract confidence and report text without guessing where they begin and end.
-
-## Activate the skill (~2 min)
-
-20. Open the workspace-root `.github/agents/radiology-assistant.agent.md`. Find its `<rules>` block and add the "use available skills" rule as the first bullet. Use the wording at the `agent-rule` anchor in `chapters/chapter1-simple-agent/suggested-changes.md`, then save the agent file.
-
-    > [!Knowledge] Creating skill files gives the agent instructions it can discover. The agent rule tells it to use those skills when handling a request; the skill's description helps it select the relevant one.
-
-21. Start a new Copilot Chat session, select **Radiology Assistant**, and rerun the original prompt on the same image:
-
-    +++Please write a radiology report for <placeholder>.+++
-
-22. Compare this report with the first one you kept visible. Check for all of the following:
-
-    - EXAM, INDICATION, COMPARISON, TECHNIQUE, FINDINGS, and IMPRESSION appear in that order, with a blank line between sections and text on the first four header lines.
-    - FINDINGS is one prose paragraph. IMPRESSION uses numbered statements, one per line.
-    - The response opens with `<confidence>...</confidence>` on its own line, followed by `<report>...</report>`.
-    - Lesion size is qualitative, such as "large" or "moderate", rather than invented millimeters.
-    - Some wording comes from `references/phrase-bank.md` in your skill directory.
-
-    > [+Hint] The report still looks like the first attempt
+    > [+Hint] Radiology Assistant is missing from the picker
     >
-    > Type `/` in Copilot Chat and check that `write-report-simple` appears in the registered skills. If it is missing, check the directory name, frontmatter `name:`, and that all three files are in `.github/skills/write-report-simple/`.
-    >
-    > If the skill is listed but the agent skips it, make the `description:` specific about when this skill applies: drafting a report when no vision model tool is available. Confirm that the skill-use rule is inside the agent's `<rules>` block. Make that rule explicit that reports must go through the report-writing skill, rather than being drafted independently. Any workflow instructions should tell the agent to select the skill, invoke it, and return its output unchanged.
-    >
-    > Save your edits and start a fresh chat so the agent reads the updated files. If it still skips the skill, try a larger model available to your lab account through the agent's `model:` setting. The repository's `docs/troubleshooting.md` has more detail on skill registration and selection.
+    > Confirm that the file is at `.github/agents/radiology-assistant.agent.md` in the workspace root, not only inside the chapter's starter directory. Start a new Copilot Chat session after copying it.
 
-23. Run the agent on a few different images and compare each report with your own reading of the image. Where is it right, and where is it wrong? Check whether it avoids invented sizes while still being unable to measure the lesion.
+2. Send:
 
-    > [!Note] The skill is intended to improve structure, phrasing, and reporting discipline. Its confidence buckets are self-reported, not proof of clinical accuracy. It can prohibit invented measurements, but it cannot supply the missing measurements. Chapter 2 adds tools for that work.
+    ```
+    Please write a radiology report for C:\Lab\samples\mri-brain-lesions\case-056\2017-06-13\series-0018.nii.gz.
+    ```
 
-## Optional: Extend the phrase bank
+    > [!Note] Remember, the agent **only accepts file paths**. Don't drag the image into chat or use the paperclip; if you do, it'll refuse.
 
-24. Choose a finding the phrase bank does not cover well, such as a specific white matter lesion pattern or an extra-axial collection. Add two or three example phrasings for positive, possible, and negative findings under a new section in `.github/skills/write-report-simple/references/phrase-bank.md`, then save it.
+    When VS Code first asks for permission to run a tool, select **Allow All**.
 
-25. Start a fresh chat and rerun the agent on a relevant image. Check whether it borrows your new wording.
+3. Note a few things:
 
-## Check your work
+    - **Output drift.** Notice that section names drift and the structure is unpredictable. If it reports lesion sizes, they don't come from a measurement tool; the model estimates or invents them.
+    - **Inconsistency**. Run it a few times. Note how output changes. Note how every time generated code is a bit if not significantly different. Try asking it to measure the lesion.
 
-- [] The workspace contains `.github/skills/write-report-simple/SKILL.md`, `template/mri-brain-template.md`, and `references/phrase-bank.md` within that skill directory.
-- [] All seven `SKILL.md` TODOs are complete: `description`, `argument-hint`, `one-liner`, `inputs`, `how-to-use`, `style-rules`, and `output-format`.
-- [] The workspace-root `.github/agents/radiology-assistant.agent.md` includes the "use available skills" rule.
-- [] You have before-and-after reports for the same image to compare.
+4. Keep the output visible — you'll compare against it after Step 3.
 
-> [+Hint] You need a completed example
->
-> Open `chapters/chapter1-simple-agent/answer-key/` in Explorer for completed versions of the chapter files. Compare them with your workspace-root copies.
+> [!Note] **Other images to try (optional).** Run the same prompt on `C:\Lab\samples\mri-brain-lesions\case-056\2018-04-14\series-0902.nii.gz` or `C:\Lab\samples\mri-brain-lesions\case-062\2021-06-25\series-0007.nii.gz`, or rerun the first image to see how much the output changes from run to run.
 
-Next, connect MedImageParse through an MCP server. Segmentation produces lesion masks; measurement code uses those masks and image geometry to calculate sizes. Reported findings and dimensions can then be traced to tool outputs instead of guesses from pixels.
+## Step 2 — Add the skill (~4 min)
+
+1. Skills live at `.github/skills/<skill-name>/`. Copy the Chapter 1 skill into place:
+
+    ```powershell
+    New-Item -ItemType Directory -Force .github\skills
+    Copy-Item -Recurse chapters\chapter1-simple-agent\answer-key\.github\skills\write-report-simple .github\skills\
+    ```
+
+2. That gives you two files:
+
+    ```
+    .github/skills/write-report-simple/
+      SKILL.md                    ← the skill body
+      references/phrase-bank.md   ← example wordings the skill reads on demand
+    ```
+
+    The skill **name** (frontmatter `name:` and the directory name) must match exactly.
+
+3. Open `SKILL.md` and read it top to bottom. What each part does:
+
+    - **`description`** (frontmatter). The agent matches this string against the task at hand to decide whether to invoke the skill. Specific beats categorical — vague descriptions get ignored.
+    - **`argument-hint`** (frontmatter). Declares optional inputs other agents or later chapters may pass in. Chapter 1 passes none, but declaring them makes the skill an interface with a contract, not just a prompt. In Chapter 2 the skill receives real outputs from a segmentation model (`findings`) and a measurement tool (`measurements`).
+    - **Opening lines.** What the skill does and doesn't do (no tools, no measuring, no priors), then the order of trust for inputs: explicit `confidence`, then tool-supplied `findings` and `measurements`, then the agent's own read of the image. Tool `measurements` are copied verbatim.
+    - **Budget.** No tool calls and at most 200 words, so the skill stays a writing step and the report stays short.
+    - **How to use.** The report layout and the rules for each section, plus a link to `references/phrase-bank.md`. The agent reads supporting files like the phrase bank only when it needs them.
+    - **Style rules.** When the agent has options, the skill picks one and names it. These rules close the gaps that cause run-to-run drift in hedging language and sentence structure — and add two rules specific to brain lesions: **numbers come from tools only**, and **laterality is the patient's**.
+    - **Output format.** Machine-readable output needs a verbatim template, not a description of one. The literal `<confidence>` and `<report>` tags let downstream steps extract the confidence value without fragile string matching.
+
+## Step 3 — Activate it (~3 min)
+
+1. The skill exists, but your agent's workflow still drafts reports on its own. Compare your agent file with the Chapter 1 agent in `answer-key/`:
+
+    - yours: `.github/agents/radiology-assistant.agent.md`
+    - answer key: `chapters/chapter1-simple-agent/answer-key/.github/agents/radiology-assistant.agent.md`
+
+    (In Explorer, right-click one file and choose **Select for Compare**, then right-click the other and choose **Compare with Selected**.)
+
+2. The only difference is the `<workflow>` block: steps 2 and 3 ("Analyze the image", "Draft the report") become one step that invokes `write-report-simple` and returns its output unchanged. Copy the answer-key agent over yours:
+
+    ```powershell
+    Copy-Item chapters\chapter1-simple-agent\answer-key\.github\agents\radiology-assistant.agent.md .github\agents\radiology-assistant.agent.md
+    ```
+
+3. Start a new chat and run the Step 1 prompt on the same image, this time naming the skill:
+
+    ```
+    /write-report-simple Please write a radiology report for C:\Lab\samples\mri-brain-lesions\case-056\2017-06-13\series-0018.nii.gz.
+    ```
+
+    The output should now:
+
+    - Use EXAM, INDICATION, COMPARISON, TECHNIQUE, FINDINGS, and IMPRESSION in order, with a blank line between sections and text on the first four header lines
+    - Have one prose paragraph for FINDINGS and numbered IMPRESSION statements, one per line
+    - Open with `<confidence>...</confidence>` on its own line, then `<report>...</report>`
+    - Describe lesion size qualitatively ("large", "moderate") instead of quoting invented millimeters
+    - Borrow phrasings you can find in `references/phrase-bank.md`
+
+    If it still looks like Step 1, the agent didn't pick up the skill. Check: directory name = `write-report-simple` exactly, both files exist, and the workflow step names `write-report-simple`. It also helps to start a new chat session.
+
+4. Read the report against your own impression. Where does it go right? Where does it go wrong? Notice that the skill made the agent *honest* about size — but it still can't tell you *how big* the lesion is. That's Chapter 2.
+
+> [!Note] **Other images to try (optional).** Run `/write-report-simple` on the other images from Step 1 and compare each with its Step 1 report.
+
+> [!Knowledge] **Ways skills get invoked.** Here the agent's workflow names `write-report-simple`, so the agent calls it for every report. Without that step, an agent can still pick up a skill automatically when its `description` matches the request, or you can name it with `/<skillname>` (`/write-report-simple Please write a radiology report for …`). Explicit is useful when a skill's description is ambiguous or when several skills could plausibly handle the request. Typing `/` in the chat input lists the registered skills, which is a good way to check that yours was picked up.
+
+Takeaway: a general-purpose LLM looking at pixels is not clinically reliable; a small skill restores the structure, phrasing discipline, and stated confidence the workflow needs — and stops it from inventing measurements. It can't *add* the measurements, though.
+
+## (Optional) Step 4 — Extra credit
+
+**Add to the phrase bank.** Pick a finding the bank doesn't cover well (for example, a specific white matter lesion pattern or an extra-axial collection) and add 2–3 example phrasings (positive / possible / negative) under a new section in `references/phrase-bank.md`. Start a fresh chat, re-run `/write-report-simple Please write a radiology report for C:\Lab\samples\mri-brain-lesions\case-056\2017-06-13\series-0018.nii.gz.`, and see whether the agent borrows your wording.
+
+## What you should have at the end
+
+- [] `.github/skills/write-report-simple/{SKILL.md, references/phrase-bank.md}`
+- [] `.github/agents/radiology-assistant.agent.md` with a workflow step that calls `write-report-simple`
+- [] An "after" report from Step 3 you can put next to the "before" from Step 1
+
+## What's next
+
+In Chapter 2 you'll give the agent **eyes and a ruler**. You'll wire **MedImageParse** — a prompt-based medical image segmentation foundation model — into the agent through a custom MCP server, then add a measurement tool that turns its lesion masks into millimeters. Every lesion in the report will then trace back to an actual mask, and every size to actual code, instead of the LLM guessing from pixels.
