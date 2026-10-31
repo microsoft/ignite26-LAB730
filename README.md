@@ -35,7 +35,7 @@ Fill in the sections below yourself, then:
 ## 🔥LAB730: Build Healthcare Agents with Foundation and Reasoning Models
 ### Session description
 
-Add your session description here. Keep it concise — 2-3 sentences about what attendees will learn and why it matters.
+Learn how to combine healthcare foundation models in Microsoft Foundry with Microsoft AI reasoning models to build intelligent healthcare agents that can analyze, orchestrate, and act on multimodal healthcare data. Explore how they can synthesize information across systems, coordinate workflows, and support clinical, operational, and research scenarios. Discover how agents can deliver context-aware insights that can help healthcare professionals make more informed decisions.
 
 ### 🚀 Getting started
 
