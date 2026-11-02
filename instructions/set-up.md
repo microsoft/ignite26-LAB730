@@ -6,7 +6,7 @@ The tools, repository, and Python dependencies are already prepared on your Wind
 
     Confirm that Explorer shows `README.md`, `chapters/`, `samples/`, and `workshop/` at the workspace root.
 
-2. Open **Copilot Chat** and send `Testing Copilot, acknowledge only`. Confirm that Copilot responds before continuing.
+2. Open **Copilot Chat** tab in VS Code and send `Testing Copilot, acknowledge only`. Confirm that Copilot responds before continuing.
 
 3. Select **Terminal > New Terminal**. Confirm that the terminal uses **PowerShell** and its current folder is the repository root you opened.
 
@@ -15,7 +15,7 @@ The tools, repository, and Python dependencies are already prepared on your Wind
     The last line should read:
 
     ```text
-    Workshop env OK — Python 3.11; endpoint OK (mip3d-mri-brain-lesion)
+    Workshop env OK - Python 3.11; endpoint OK (mip3d-mri-brain-lesion)
     ```
 
 > [+Hint] The environment check does not run or fails

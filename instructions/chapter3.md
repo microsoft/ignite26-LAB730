@@ -1,4 +1,4 @@
-# Chapter 3 — Connect a knowledge source
+# Chapter 3 - Connect a knowledge source
 
 **Time budget: ~10 minutes.**
 
@@ -21,7 +21,7 @@ There's nothing to write in this chapter. Copy in two skills and a small data fo
 
 > [!Note] The patient records under `data/patients/` are **synthetic**, built around de-identified MRI reports.
 
-## Step 1 — Skim the patient record (~3 min)
+## Step 1 - Skim the patient record (~3 min)
 
 1. Open `chapters/chapter3-knowledge-sources/data/patients/SYN0056.json`. The shape is intentionally simple (not something that a real-world export from an EHR would look like): flat fields, easy to read. Patient `SYN0056` is the case you measured in Chapter 2.
 
@@ -41,7 +41,7 @@ There's nothing to write in this chapter. Copy in two skills and a small data fo
 
 !IMAGE[Timeline for SYN0056: radiosurgery in October 2016, the prior MRI on 2017-06-13, resection and a post-operative MRI in August 2017, head CTs on dexamethasone, and the current MRI on 2018-04-14. Comparing with the prior crosses the resection. Without the chart the report says the tumor core increased; with the chart it says the mass is new since the post-operative MRI and frames recurrence versus radiation necrosis.](https://raw.githubusercontent.com/microsoft/LAB730-ignite-2026-healthcare-agents/main/chapters/chapter3-knowledge-sources/img/treatment-timeline.svg)
 
-## Step 2 — Copy the skills and data (~2 min)
+## Step 2 - Copy the skills and data (~2 min)
 
 1. From the workspace root, in the VS Code PowerShell terminal:
 
@@ -72,7 +72,7 @@ There's nothing to write in this chapter. Copy in two skills and a small data fo
 
 3. Reload the VS Code window so the new skills register: open the command palette (`Ctrl+Shift+P`) and run `Developer: Reload Window`.
 
-## Step 3 — Run the agent (~3 min)
+## Step 3 - Run the agent (~3 min)
 
 1. Start a new chat with **Radiology Assistant** and ask:
 
@@ -96,7 +96,7 @@ There's nothing to write in this chapter. Copy in two skills and a small data fo
     - **FINDINGS** quotes the factsheet's diameters and volumes, says the comparison crosses the 2017-08-17 resection, describes the mass against the post-operative baseline, notes the dexamethasone, and attributes the midline shift to the head CTs.
     - **IMPRESSION** answers the order: it frames recurrent tumor versus radiation necrosis rather than calling progression.
 
-## Step 4 — Compare with your Chapter 2 report (~2 min)
+## Step 4 - Compare with your Chapter 2 report (~2 min)
 
 1. Put this report next to the comparison report from Chapter 2's optional step: the same two scans, measured by the same tools. If you skipped that step or no longer have the report, run:
 

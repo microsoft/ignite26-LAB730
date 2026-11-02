@@ -1,4 +1,4 @@
-# Chapter 2 — Using foundation models
+# Chapter 2 - Using foundation models
 
 **Time budget: ~20 minutes.**
 
@@ -36,8 +36,8 @@ Every file the tools write goes to `audit-log/` at your workspace root, in one f
 
 **Steps:**
 
-0. Setup — copy the Chapter 2 files. (~3 min)
-1. See how the tools are wired — read the server and agent changes, then start the server. (~5 min)
+0. Setup - copy the Chapter 2 files. (~3 min)
+1. See how the tools are wired - read the server and agent changes, then start the server. (~5 min)
 2. Skim the factsheet and measured-report skills. (~4 min)
 3. Try it, then explore the audit log. (~8 min)
 
@@ -74,7 +74,7 @@ Every file the tools write goes to `audit-log/` at your workspace root, in one f
 
     The server reads `MIP_MODEL_ENDPOINT` and `MIP_MODEL_API_KEY` from the `.env` at the repository root, the same file `check_env.py` uses.
 
-## Step 1 — See how the tools are wired (~5 min)
+## Step 1 - See how the tools are wired (~5 min)
 
 1. Open `mcp/medimageparse-server/server.py`. The `list_models` wrapper delegates to a function in `segmentation.py` and reuses that function's docstring as the tool description. Notice the three tools below it, which follow the same pattern:
 
@@ -130,13 +130,13 @@ Every file the tools write goes to `audit-log/` at your workspace root, in one f
     > 3. Under **Trusted Folders & Workspaces**, select **Add Folder** and choose the lab repository root. Only trust folders whose contents you trust.
     > 4. Start a new Copilot Chat session. If prompted, approve the `medimageparse` MCP server, then confirm its tools appear in the chat tool picker.
 
-## Step 2 — Skim the factsheet and measured-report skills (~4 min)
+## Step 2 - Skim the factsheet and measured-report skills (~4 min)
 
 1. Open `.github/skills/write-imaging-factsheet/SKILL.md` and its `template/factsheet.md`. The skill segments, cleans, and describes each scan, then fills the template. Every line cites a descriptor ID such as `[L1.bidimensional]`, and values are copied, never computed.
 
 2. Then open `.github/skills/write-report-measured/SKILL.md`. It invokes the factsheet skill, then passes the factsheet's numbers to `write-report-simple` as `measurements`, copied verbatim. Lesion IDs are ranked separately in each scan, so change is reported for totals, not matched lesions.
 
-## Step 3 — Try it, then explore the audit log (~8 min)
+## Step 3 - Try it, then explore the audit log (~8 min)
 
 1. In a new chat with **Radiology Assistant**, ask for a measured report on the 2018 scan:
 
