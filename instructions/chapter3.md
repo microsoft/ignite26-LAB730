@@ -70,7 +70,7 @@ There's nothing to write in this chapter. Copy in two skills and a small data fo
 
     No MCP changes: the report skill uses the four tools from Chapter 2.
 
-3. Reload the VS Code window so the new skills register: open the command palette (`Ctrl+Shift+P`) and run `Developer: Reload Window`.
+3. Reload the VS Code window so the new skills register: open the command palette (`Ctrl+Shift+P`) and run `Developer: Reload Window`. Ensure that the MCP server is running (command palette -> MCP: List Servers -> medimageparse, check status says "Running")
 
 ## Step 3 - Run the agent (~3 min)
 
@@ -95,6 +95,9 @@ There's nothing to write in this chapter. Copy in two skills and a small data fo
     - **COMPARISON** names the 2017-06-13 MRI (`SYN0056_002`) and the other relevant studies.
     - **FINDINGS** quotes the factsheet's diameters and volumes, says the comparison crosses the 2017-08-17 resection, describes the mass against the post-operative baseline, notes the dexamethasone, and attributes the midline shift to the head CTs.
     - **IMPRESSION** answers the order: it frames recurrent tumor versus radiation necrosis rather than calling progression.
+    
+> [!note] Note that if you have *audit-log* directory with prior results, the model may choose to "cheat" and use that instead of running the code to create segmentations, factsheet, and check with medical record. Inspect the trace and if you see this happening, try deleting the directory and re-running the prompt. We are using a very simple model here and this is where it may start failing. 
+
 
 ## Step 4 - Compare with your Chapter 2 report (~2 min)
 

@@ -2,13 +2,13 @@
 
 The tools, repository, and Python dependencies are already prepared on your Windows 11 VM. Use the VS Code PowerShell terminal for the commands in this lab.
 
-1. In VS Code, select **File > Open Folder** and open the Lab 730 repository folder: `C:\Lab`. When prompted, confirm that it's a **trusted workspace**.
+1. In VS Code, select **File > Open Folder** and open the Lab 730 repository folder: `C:\Lab` if it's not already open. When prompted, confirm that it's a **trusted workspace**.
 
     Confirm that Explorer shows `README.md`, `chapters/`, `samples/`, and `workshop/` at the workspace root.
 
 2. Open **Copilot Chat** tab in VS Code and send `Testing Copilot, acknowledge only`. Confirm that Copilot responds before continuing.
 
-3. Select **Terminal > New Terminal**. Confirm that the terminal uses **PowerShell** and its current folder is the repository root you opened.
+3. Select **View > Terminal** to open the terminal if it's not open. Confirm that the terminal uses **PowerShell** and its current folder is the repository root you opened.
 
 4. Run `uv run workshop/check_env.py`. It checks the Python packages, then sends a sample scan to the segmentation endpoint, which can take a few seconds.
 

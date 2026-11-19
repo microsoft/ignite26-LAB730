@@ -8,7 +8,7 @@
 
 ## Overview
 
-In Chapter 1 the agent wrote tidier reports, but it still had to guess whether a lesion was there and could not measure it. In this chapter you connect **MedImageParse 3D**, a foundation model that segments whole MRI volumes from text prompts, through a small **MCP (Model Context Protocol) server**. Then you add tools that turn its mask into measurements, and a skill that collects those measurements into a factsheet.
+In Chapter 1 the agent wrote tidier reports, but it still had to guess whether a lesion was there and could not measure it. In this chapter you connect **MedImageParse 3D**, an imaging foundation model that segments whole MRI volumes from text prompts, through a small **MCP (Model Context Protocol) server**. Then you add tools that turn its mask into measurements, and a skill that collects those measurements into a factsheet.
 
 !IMAGE[Chapter 2 pipeline: a brain MRI volume goes to MedImageParse 3D through segment, the mask goes to clean_segmentation and describe_lesions, and the descriptors go through the factsheet to write-report-simple. Each step saves its files in the image's audit-log folder.](https://raw.githubusercontent.com/microsoft/LAB730-ignite-2026-healthcare-agents/main/chapters/chapter2-foundation-models/img/segmentation-pipeline.svg)
 
@@ -130,6 +130,18 @@ Every file the tools write goes to `audit-log/` at your workspace root, in one f
     > 3. Under **Trusted Folders & Workspaces**, select **Add Folder** and choose the lab repository root. Only trust folders whose contents you trust.
     > 4. Start a new Copilot Chat session. If prompted, approve the `medimageparse` MCP server, then confirm its tools appear in the chat tool picker.
 
+4. Check that the agent can see the tools. Start a **new chat session** with **Radiology Assistant**, then select the **Configure Tools** button in the chat input.
+
+    !IMAGE[Configure Tools button in the chat input](https://raw.githubusercontent.com/microsoft/LAB730-ignite-2026-healthcare-agents/main/chapters/chapter2-foundation-models/img/configure-tools.png)
+
+    Confirm that **medimageparse** is checked.
+
+    !IMAGE[Configured tools with medimageparse checked](https://raw.githubusercontent.com/microsoft/LAB730-ignite-2026-healthcare-agents/main/chapters/chapter2-foundation-models/img/configure-tools-medimageparse.png)
+
+    If **medimageparse** is missing or not checked, reload the window: open the command palette (`Ctrl+Shift+P`) and run `Developer: Reload Window`. Then start a new chat session and check again.
+
+    !IMAGE[Developer: Reload Window in the command palette](https://raw.githubusercontent.com/microsoft/LAB730-ignite-2026-healthcare-agents/main/chapters/chapter2-foundation-models/img/reload-window.png)
+
 ## Step 2 - Skim the factsheet and measured-report skills (~4 min)
 
 1. Open `.github/skills/write-imaging-factsheet/SKILL.md` and its `template/factsheet.md`. The skill segments, cleans, and describes each scan, then fills the template. Every line cites a descriptor ID such as `[L1.bidimensional]`, and values are copied, never computed.
@@ -138,7 +150,7 @@ Every file the tools write goes to `audit-log/` at your workspace root, in one f
 
 ## Step 3 - Try it, then explore the audit log (~8 min)
 
-1. In a new chat with **Radiology Assistant**, ask for a measured report on the 2018 scan:
+1. In a **new chat session** with **Radiology Assistant**, ask for a measured report on the 2018 scan:
 
     ```
     /write-report-measured Please write a radiology report for C:\Lab\samples\mri-brain-lesions\case-056\2018-04-14\series-0902.nii.gz.
@@ -173,10 +185,10 @@ Every file the tools write goes to `audit-log/` at your workspace root, in one f
 
     1. Open the two axial montages side by side. In the overlay, red is enhancing tumor, blue is edema, and green is the necrotic core. Look for colored regions you would not call tumor; `clean_segmentation` drops the smallest of them before measuring.
     2. In `.descriptors.json`, find `L1.bidimensional` and match its `slice_index` to the `z` label on the axial montage and the measurement image.
-    3. Read the `limitation` entries: what the descriptors cannot tell you, such as side and anatomy.
-    4. Pick one factsheet line and find the descriptor it cites. Every other file here was written by code, not by the language model.
+    3. Read the `limitation` entries in the factsheet: not how the model captured what the descriptors cannot tell it, such as side and anatomy.
+    4. Pick one factsheet line and find the descriptor it cites. Every line here was written by code, not by the language model.
 
-> [!Knowledge] **Why this matters.** `write-report-simple` is unchanged from Chapter 1, and the agent file gained only a tool entry and an updated workflow step. You added segmentation and measurement by registering MCP tools.
+> [!Knowledge] **Why this matters.** `write-report-simple` is unchanged from Chapter 1, and the agent file gained only a tool entry and an updated workflow step. You added segmentation and measurement by registering MCP tools. The new /write-report-measured skill introduced factsheet and auditability.
 
 ## (Optional) Compare with a prior scan
 
