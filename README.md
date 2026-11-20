@@ -13,6 +13,14 @@ Learn how to combine healthcare foundation models in Microsoft Foundry with Micr
 
 **Lab code:** The starter files, answer keys, sample brain MRI scans, and chapter guides are in [microsoft/LAB730-ignite-2026-healthcare-agents](https://github.com/microsoft/LAB730-ignite-2026-healthcare-agents).
 
+> [!IMPORTANT]
+> **This lab depends on a custom model.** It calls a MedImageParse 3D model that we fine-tuned to segment brain tumors on post-contrast T1 MRI, using data from [UPENN-GBM](https://www.cancerimagingarchive.net/collection/upenn-gbm/). During the lab at Ignite 2026, we provided access to this model. The lab does not work without this custom model. To run the lab, you can:
+>
+> - **Fine-tune your own.** Follow the [MedImageParse 3D fine-tuning example](https://github.com/microsoft/healthcareai-examples/tree/main/azureml/medimageparse3d/finetuning) to fine-tune, evaluate, and deploy the model with Azure Machine Learning. Use UPENN-GBM as we did, or a different dataset.
+> - **Ask us for access.** Contact [hlsfrontierteam@microsoft.com](mailto:hlsfrontierteam@microsoft.com), and we can provide access to the model.
+>
+> The [lab code README](https://github.com/microsoft/LAB730-ignite-2026-healthcare-agents#readme) explains how to connect the lab to your endpoint.
+
 ### 🚀 Getting started
 
 #### In a guided session

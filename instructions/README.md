@@ -12,4 +12,5 @@ These pages are the step-by-step instructions shown in the lab environment durin
 
 They use Skillable markup, such as `@lab` sign-in values and `!IMAGE[]` images, so some lines only work in the lab environment.
 
-Learning at your own pace? Use the chapter guides in [microsoft/LAB730-ignite-2026-healthcare-agents](https://github.com/microsoft/LAB730-ignite-2026-healthcare-agents) instead.
+> [!IMPORTANT]
+> Learning at your own pace? Use the chapter guides in [microsoft/LAB730-ignite-2026-healthcare-agents](https://github.com/microsoft/LAB730-ignite-2026-healthcare-agents) instead. The lab depends on a custom model, so read the note at the top of the [README](../README.md) before you start.
